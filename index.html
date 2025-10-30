@@ -1,0 +1,124 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>Handsome — Body Transformation Tracker</title>
+  <meta name="theme-color" content="#0a2540" />
+  <link rel="manifest" href="/manifest.json" />
+  <style>
+    :root{--card:#071a2a;--muted:#9aa4b2;--accent:#0a2540;--glass:rgba(255,255,255,0.03)}
+    html,body{height:100%;margin:0;font-family:Inter,system-ui,Segoe UI,Roboto,Arial;background:linear-gradient(180deg,#031227 0%, #071124 100%);color:#e6eef6}
+    .app{max-width:980px;margin:20px auto;padding:20px}
+    header{display:flex;gap:16px;align-items:center}
+    h1{margin:0;font-size:1.4rem}
+    .sub{color:var(--muted);font-size:0.95rem}
+    .card{background:var(--card);padding:14px;border-radius:12px;box-shadow:0 6px 20px rgba(2,6,23,0.6);margin-top:16px}
+    .days{display:flex;gap:8px;flex-wrap:wrap}
+    .day{flex:1 1 130px;background:var(--glass);padding:10px;border-radius:10px}
+    label{display:flex;align-items:center;gap:8px}
+    input[type=checkbox]{width:18px;height:18px}
+    .task-title{font-weight:600}
+    .muted{color:var(--muted);font-size:0.9rem}
+    .controls{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+    button{background:#0a2540;border:none;color:#fff;padding:8px 12px;border-radius:8px;cursor:pointer;font-weight:700}
+    button.ghost{background:transparent;border:1px solid rgba(255,255,255,0.06);color:var(--muted)}
+    .tracker table{width:100%;border-collapse:collapse}
+    .tracker th, .tracker td{padding:8px;border-bottom:1px dashed rgba(255,255,255,0.03);text-align:left}
+    .footer{margin-top:18px;color:var(--muted);font-size:0.85rem;text-align:center}
+    .quote{font-style:italic;color:#b8e3cd;text-align:center}
+    .progress{height:10px;background:rgba(255,255,255,0.06);border-radius:999px;overflow:hidden}
+    .progress > i{display:block;height:100%;background:linear-gradient(90deg,#0a2540,#0b5ea8)}
+    @media (max-width:640px){.day{flex:1 1 48%}}
+  </style>
+</head>
+<body>
+  <div class="app">
+    <header>
+      <div>
+        <h1>Handsome</h1>
+        <div class="sub">Your 3‑Month Body Transformation Tracker — starting 1 Nov 2025</div>
+      </div>
+      <div style="margin-left:auto;text-align:right">
+        <div class="muted small">Saved locally in your browser</div>
+      </div>
+    </header>
+
+    <div class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <strong>Weekly View</strong>
+        <div class="muted">Switch week: <button id="prevWeek" class="ghost">◀</button> <button id="nextWeek" class="ghost">▶</button></div>
+      </div>
+
+      <div id="weekLabel" class="muted" style="margin-top:8px"></div>
+      <div style="margin-top:12px">
+        <div class="days" id="daysContainer"></div>
+      </div>
+
+      <div class="controls">
+        <button id="markAll">Mark all done</button>
+        <button id="clearAll" class="ghost">Clear checks</button>
+        <button id="todayBtn" class="ghost">Go to today</button>
+        <button id="exportBtn" class="ghost">Export JSON</button>
+        <button id="importBtn" class="ghost">Import JSON</button>
+        <input id="importFile" type="file" accept="application/json" style="display:none">
+      </div>
+
+      <div style="margin-top:12px"><div class="muted small">Tap a checkbox to mark complete. Data persists locally.</div></div>
+    </div>
+
+    <div class="card tracker">
+      <strong>Weekly Progress Tracker (3 months)</strong>
+      <div class="muted small">Enter values for each completed week and click Save</div>
+      <table id="trackerTable" style="margin-top:8px">
+        <thead><tr><th>Week</th><th>Weight (kg)</th><th>Thigh (cm)</th><th>Waist (cm)</th><th>Saved</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <div class="controls" style="margin-top:10px">
+        <button id="saveTracker">Save tracker</button>
+        <button id="resetTracker" class="ghost">Reset tracker</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Progress Summary</strong>
+      <div style="margin-top:8px">
+        <div class="muted small">Completion this week</div>
+        <div style="margin-top:6px" class="progress"><i id="weekProgress" style="width:0%"></i></div>
+        <div style="margin-top:8px" id="progressText"></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <strong>Motivation</strong>
+      <div class="quote" id="dailyQuote">"Small consistent actions create big results."</div>
+      <div class="footer">Handsome — stay consistent. Starts 1 Nov 2025.</div>
+    </div>
+  </div>
+
+<script>
+const START_DATE = new Date('2025-11-01');
+const DEFAULT_PLAN = {daysOfWeek:[{name:'Monday',type:'Workday',tasks:['Wake up + lemon water (300ml)','Workout (Fat burn + toning)','Cool down + shower','Breakfast','Leave for office']},{name:'Tuesday',type:'Home',tasks:['Wake up + lemon water','Workout (Fat burn + toning)','Breakfast','Ready for day']},{name:'Wednesday',type:'Workday',tasks:['Wake up + lemon water','Workout (Fat burn + toning)','Cool down + shower','Breakfast','Leave for office']},{name:'Thursday',type:'Home',tasks:['Wake up + lemon water','Workout (Upper body + core)','Breakfast','Ready for day']},{name:'Friday',type:'Workday',tasks:['Wake up + lemon water','Workout (Fat burn + toning)','Cool down + shower','Breakfast','Leave for office']},{name:'Saturday',type:'Home',tasks:['Wake up + lemon water','Workout (Full body + cardio)','Breakfast','Ready for day']},{name:'Sunday',type:'Rest',tasks:['Morning walk (20 min)','Yoga / mobility (10 min)','Stretching']}],weeks:12};
+
+const KEY='handsome_data_v1';const TRACKER_KEY='handsome_tracker_v1';
+let state=loadState();let currentWeekIndex=state.currentWeekIndex||0;
+
+function loadState(){try{const raw=localStorage.getItem(KEY);if(raw)return JSON.parse(raw);}catch(e){}const weeks=[];for(let w=0;w<DEFAULT_PLAN.weeks;w++){const days=DEFAULT_PLAN.daysOfWeek.map(d=>({date:null,tasks:d.tasks.map(t=>({text:t,done:false}))}));weeks.push({days});}return{weeks,currentWeekIndex:0,quotes:[]};}
+function saveState(){localStorage.setItem(KEY,JSON.stringify(state));}
+
+const daysContainer=document.getElementById('daysContainer');const weekLabel=document.getElementById('weekLabel');
+function renderWeek(){daysContainer.innerHTML='';const start=getWeekStartDate(currentWeekIndex);weekLabel.textContent=`Week ${currentWeekIndex+1} — ${formatDate(start)} to ${formatDate(addDays(start,6))}`;const week=state.weeks[currentWeekIndex];week.days.forEach((day,i)=>{const d=document.createElement('div');d.className='day';const dayName=DEFAULT_PLAN.daysOfWeek[i].name;d.innerHTML=`<div style="display:flex;justify-content:space-between;align-items:center"><div><strong>${dayName}</strong><div class="muted small">${DEFAULT_PLAN.daysOfWeek[i].type}</div></div><div class="muted small">${formatDate(addDays(getWeekStartDate(currentWeekIndex),i))}</div></div>`;const ul=document.createElement('div');ul.style.marginTop='8px';day.tasks.forEach((task,ti)=>{const id=`c_${currentWeekIndex}_${i}_${ti}`;const lab=document.createElement('label');lab.innerHTML=`<input type="checkbox" id="${id}" ${task.done?'checked':''}><div style="margin-left:8px"><div class="task-title">${task.text}</div></div>`;ul.appendChild(lab);lab.querySelector('input').addEventListener('change',e=>{state.weeks[currentWeekIndex].days[i].tasks[ti].done=e.target.checked;saveState();updateProgress();});});d.appendChild(ul);daysContainer.appendChild(d);});updateProgress();}
+
+function updateProgress(){const week=state.weeks[currentWeekIndex];let total=0,done=0;week.days.forEach(d=>d.tasks.forEach(t=>{total++;if(t.done)done++;}));const pct=total?Math.round(done/total*100):0;document.getElementById('weekProgress').style.width=pct+'%';document.getElementById('progressText').textContent=`${done} of ${total} tasks done — ${pct}%`;}
+
+function getWeekStartDate(weekIndex){const start=new Date(START_DATE);start.setDate(start.getDate()+weekIndex*7);return start;}
+function addDays(d,n){const x=new Date(d);x.setDate(x.getDate()+n);return x;}function formatDate(d){return d.toLocaleDateString();}
+
+document.getElementById('prevWeek').addEventListener('click',()=>{if(currentWeekIndex>0)currentWeekIndex--;renderWeek();state.currentWeekIndex=currentWeekIndex;saveState();});document.getElementById('nextWeek').addEventListener('click',()=>{if(currentWeekIndex<DEFAULT_PLAN.weeks-1)currentWeekIndex++;renderWeek();state.currentWeekIndex=currentWeekIndex;saveState();});document.getElementById('todayBtn').addEventListener('click',()=>{currentWeekIndex=0;renderWeek();state.currentWeekIndex=currentWeekIndex;saveState();});document.getElementById('markAll').addEventListener('click',()=>{const week=state.weeks[currentWeekIndex];week.days.forEach(d=>d.tasks.forEach(t=>t.done=true));saveState();renderWeek();});document.getElementById('clearAll').addEventListener('click',()=>{const week=state.weeks[currentWeekIndex];week.days.forEach(d=>d.tasks.forEach(t=>t.done=false));saveState();renderWeek();});
+
+const trackerTbody=document.querySelector('#trackerTable tbody');
+function renderTracker(){trackerTbody.innerHTML='';const tracker=loadTracker();for(let w=0;w<DEFAULT_PLAN.weeks;w++){const tr=document.createElement('tr');const weekTd=document.createElement('td');weekTd.textContent=`Week ${w+1}`;const wTd=document.createElement('td');const inW=document.createElement('input');inW.value=tracker[w]?.weight||'';inW.dataset.idx=w;inW.placeholder='kg';wTd.appendChild(inW);const tTd=document.createElement('td');const inT=document.createElement('input');inT.value=tracker[w]?.thigh||'';inT.placeholder='cm';tTd.appendChild(inT);const waistTd=document.createElement('td');const inWa=document.createElement('input');inWa.value=tracker[w]?.waist||'';inWa.placeholder='cm';waistTd.appendChild(inWa);const savedTd=document.createElement('td');savedTd.textContent=tracker[w]?'Yes':'—';tr.appendChild(weekTd);tr.appendChild(wTd);tr.appendChild(tTd);tr.appendChild(waistTd);tr.appendChild(savedTd);trackerTbody.appendChild(tr);}}
+document.getElementById('saveTracker').addEventListener('click',()=>{const rows=trackerTbody.querySelectorAll('tr');const out=[];rows.forEach((r,i)=>{const inputs=r.querySelectorAll('input');const w=inputs[0].value.trim();const t=inputs[1].value.trim();const wa=inputs[2].value.trim();if(w||t||wa)out[i]={weight:w,thigh:t,waist:wa};});localStorage.setItem(TRACKER_KEY,JSON.stringify(out));alert('Tracker saved');renderTracker();});document.getElementById('resetTracker').addEventListener('click',()=>{if(confirm('Reset weekly tracker?')){localStorage.removeItem(TRACKER_KEY);renderTracker();}});function loadTracker(){try{const raw=localStorage.getItem(TRACKER_KEY);return raw?JSON.parse(raw):[];}catch(e){return[];}}document.getElementById('exportBtn').addEventListener('click',()=>{const payload={state,tracker:loadTracker(),exportedAt:new Date().toISOString()};const blob=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download='handsome-export.json';document.body.appendChild(a);a.click();a.remove();URL.revokeObjectURL(url);});document.getElementById('importBtn').addEventListener('click',()=>{document.getElementById('importFile').click();});document.getElementById('importFile').addEventListener('change',e=>{const f=e.target.files[0];if(!f)return;const reader=new FileReader();reader.onload=ev=>{try{const parsed=JSON.parse(ev.target.result);if(parsed.state){state=parsed.state;localStorage.setItem(KEY,JSON.stringify(state));if(parsed.tracker)localStorage.setItem(TRACKER_KEY,JSON.stringify(parsed.tracker));alert('Import successful');renderWeek();renderTracker();}else{alert('Invalid import file');}}catch(err){alert('Import failed: '+err.message);}};reader.readAsText(f);});const QUOTES=['Consistency is the bridge between goals and results.','Do it for the future version of you.','Small steps every day — big changes in 90 days.','You don\'t have to be perfect, just consistent.','Strength is built one rep at a time.'];function setDailyQuote(){const q=QUOTES[Math.floor(Math.random()*QUOTES.length)];document.getElementById('dailyQuote').textContent='"'+q+'"';}setDailyQuote();renderTracker();renderWeek();if('serviceWorker' in navigator){navigator.serviceWorker.register('/service-worker.js').then(()=>console.log('SW registered')).catch(()=>console.log('SW failed'));}
+</script>
+</body>
+</html>
